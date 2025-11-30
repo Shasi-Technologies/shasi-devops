@@ -105,7 +105,7 @@ Key concepts:
 - Docker Registry — store for images (Docker Hub, private registries)  
 - Docker Container — running instance of an image
 
-### Docker architecture (diagram)
+### 🔁 Docker architecture (diagram)
 ```mermaid
 flowchart LR
   SRC["Source Code"] -->|CI Build| BUILD["Build & Tests"]
