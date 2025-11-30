@@ -1,0 +1,25 @@
+# Multi-stage Dockerfile for React app served by nginx
+# Ensure package.json scripts include "build"
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Copy package files first to leverage cache
+COPY package.json package-lock.json* yarn.lock* ./
+# Use npm ci for deterministic installs
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+COPY . .
+RUN npm run build
+
+# Production image
+FROM nginx:stable-alpine
+LABEL maintainer="You <you@example.com>"
+
+# Remove default nginx content
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy built files
+COPY --from=builder /app/build /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
