@@ -1,0 +1,6 @@
+flowchart LR
+  SRC["Source Code + Dockerfile"] -->|docker build| IMAGE2["Docker Image"]
+  IMAGE2 -->|push| REG2["Docker Registry"]
+  REG2 -->|pull| NODE["Host Server"]
+  NODE -->|docker run| RUNNING["Running Container"]
+  RUNNING -->|logs / exec| ADMIN["Developer / Admin"]
