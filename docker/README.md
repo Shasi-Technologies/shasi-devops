@@ -105,16 +105,16 @@ Key concepts:
 - Docker Registry — store for images (Docker Hub, private registries)  
 - Docker Container — running instance of an image
 
-### 🔁 Docker architecture (diagram)
+### Docker architecture (diagram)
 ```mermaid
 flowchart LR
-  src[Source Code / Repo] -->|CI Build| build[Build + Tests]
-  build -->|artifact| artifact[Jar/WAR/Static]
-  artifact -->|docker build| image[Docker Image]
-  image --> registry[Docker Registry (Docker Hub / Private)]
-  registry -->|docker pull| host[Host / Server]
-  host -->|docker run| container[Docker Container]
-  container --> users[End Users]
+  SRC["Source Code"] -->|CI Build| BUILD["Build & Tests"]
+  BUILD -->|artifact| ARTIFACT["Jar / WAR / Static"]
+  ARTIFACT -->|docker build| IMAGE["Docker Image"]
+  IMAGE -->|push| REGISTRY["Docker Registry"]
+  REGISTRY -->|pull| HOST["Host Server"]
+  HOST -->|docker run| CONTAINER["Docker Container"]
+  CONTAINER -->|serve| USERS["End Users"]
 ```
 
 ### ⚙️ Process flow (CI → Registry → Deploy)
@@ -137,13 +137,12 @@ sequenceDiagram
 ### 🔨 Build & run flow
 ```mermaid
 flowchart LR
-  src[Source Code + Dockerfile] -->|docker build| img[Docker Image]
-  img -->|docker push| registry[Docker Registry]
-  registry -->|docker pull| node[Host/Server]
-  node -->|docker run| cont[Docker Container (running)]
-  cont -->|logs/exec| dev[Developer / Admin]
+  SRC["Source Code + Dockerfile"] -->|docker build| IMAGE2["Docker Image"]
+  IMAGE2 -->|docker push| REG2["Docker Registry"]
+  REG2 -->|docker pull| NODE["Host Server"]
+  NODE -->|docker run| RUNNING["Running Container"]
+  RUNNING -->|logs / exec| ADMIN["Developer / Admin"]
 ```
-
 ---
 
 ## 🖥️ Install Docker (Linux / EC2)
