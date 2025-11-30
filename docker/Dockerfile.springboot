@@ -1,0 +1,19 @@
+# Dockerfile for Spring Boot (JAR)
+# Build with: mvn clean package
+FROM eclipse-temurin:17-jre-jammy
+
+LABEL maintainer="You <you@example.com>"
+
+WORKDIR /app
+
+# copy the fat jar (adjust name if necessary)
+# If there are multiple jars, use target/*.jar or substitute the exact jar name
+COPY target/*.jar app.jar
+
+EXPOSE 8080
+
+# Optional: set Java options via env var
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
+

@@ -1,0 +1,14 @@
+# Dockerfile for Java Web App (WAR) using Tomcat
+# Build with: mvn clean package
+FROM tomcat:9.0-jdk17
+LABEL maintainer="You <you@example.com>"
+
+# Remove default webapps (optional)
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copy WAR (adjust name if necessary)
+COPY target/app.war /usr/local/tomcat/webapps/ROOT.war
+
+EXPOSE 8080
+
+# Tomcat ENTRYPOINT already defined by base image

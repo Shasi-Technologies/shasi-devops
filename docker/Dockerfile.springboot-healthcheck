@@ -1,0 +1,33 @@
+# Dockerfile for Spring Boot (JAR) with non-root user and HEALTHCHECK
+FROM eclipse-temurin:17-jre-jammy
+
+LABEL maintainer="You <you@example.com>"
+
+# Install curl for HEALTHCHECK and reduce image layers
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user and group
+RUN groupadd -r appuser && useradd --no-log-init -r -g appuser appuser
+
+WORKDIR /app
+
+# Copy the Spring Boot fat jar (adjust pattern to your artifact name if needed)
+COPY target/*.jar app.jar
+
+# Make sure app files are owned by non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 8080
+
+# HEALTHCHECK: try /actuator/health first (common in Spring Boot), fallback to root
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || curl -f http://localhost:8080/ || exit 1
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

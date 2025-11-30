@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant Dev as Developer
+  participant Repo as Git Repo
+  participant CI as CI
+  participant Registry as Docker Registry
+  participant Host as Production Host
+
+  Dev->>Repo: push code
+  Repo->>CI: trigger pipeline
+  CI->>CI: build & unit tests
+  CI->>CI: package artifact (jar/war/build)
+  CI->>CI: docker build & tag
+  CI->>Registry: push image
+  Host->>Registry: pull image
+  Host->>Host: deploy (docker run / docker-compose / swarm)
+  Host->>Users: serve application
