@@ -51,15 +51,14 @@ High-level components:
 Mermaid diagram (application flow):
 
 ```mermaid
-%%{init: {"theme":"base","themeVariables":{"primaryColor":"#2b6cb0"}}}%%
-graph LR
-  A[Frontend (Angular 16)] -->|HTTP/REST| B[Backend (Java 17 / Spring Boot)]
-  B -->|JDBC| C[MySQL 8.5]
-  B -->|Deploy WAR| D[Tomcat 9.0]
+flowchart LR
+  FE["Frontend - Angular 16"] -->|HTTP/REST| BE["Backend - Java 17 Spring Boot"]
+  BE -->|JDBC| DB["MySQL 8.5"]
+  BE -->|Deploy WAR| TOMCAT["Tomcat 9"]
   subgraph Users
-    U[End Users]
+    U["End Users"]
   end
-  U -->|Browser| A
+  U -->|Browser| FE
 ```
 
 ---
@@ -321,11 +320,15 @@ URL : http://public-ip:host-port/war-file-name/
 ```bash
 # from repo root (where pom.xml and Dockerfile.springboot exist)
 mvn clean package
+
 docker build -f Dockerfile.springboot -t myorg/sb-app:latest .
+
 # run (map host 8080 to container 8080)
 docker run -d --name sb-app -p 8080:8080 myorg/sb-app:latest
+
 # view logs
 docker logs -f sb-app
+
 # stop & remove
 docker stop sb-app && docker rm sb-app
 ```
@@ -333,9 +336,12 @@ docker stop sb-app && docker rm sb-app
 ### Java Web (WAR + Tomcat)
 ```bash
 mvn clean package
+
 # build image using Dockerfile.tomcat (expects target/app.war or adjust)
 docker build -f Dockerfile.tomcat -t myorg/tomcat-app:latest .
+
 docker run -d --name tomcat-app -p 8080:8080 myorg/tomcat-app:latest
+
 docker logs -f tomcat-app
 ```
 
@@ -343,13 +349,16 @@ docker logs -f tomcat-app
 ```bash
 # Ensure requirements.txt and app.py present
 docker build -f Dockerfile.python -t myorg/flask-app:latest .
+
 docker run -d --name flask-app -p 5000:5000 myorg/flask-app:latest
+
 docker logs -f flask-app
 ```
 
 ### React (production build served by nginx)
 ```bash
 docker build -f Dockerfile.react -t myorg/react-app:latest .
+
 docker run -d --name react-app -p 80:80 myorg/react-app:latest
 # Open http://<host-ip>/
 ```
@@ -359,6 +368,7 @@ docker run -d --name react-app -p 80:80 myorg/react-app:latest
 # Compose will build the Spring app image and start both services (db persists under ./mysql-data)
 docker-compose up -d --build
 docker-compose ps
+
 # stop
 docker-compose down
 ```
@@ -479,6 +489,7 @@ Install docker-compose (example):
 ```bash
 sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
+
 docker-compose --version
 ```
 
@@ -572,8 +583,10 @@ sudo sh get-docker.sh
 # For Master Machine below command
 sudo docker swarm init --advertise-addr <master-private-ip>
 # Ex: sudo docker swarm init --advertise-addr 172.31.41.217
+
 sudo docker swarm join-token worker  # get token
 # Ex: sudo docker swarm join --token SWMTKN-1-4pkn4fiwm09haue0v633s6snitq693p1h7d1774c8y0hfl9yz9-8l7vptikm0x29shtkhn0ki8wz 172.31.37.100:2377
+
 # On worker nodes:
 sudo docker swarm join --token <token> <master-ip>:2377
 ```
@@ -589,12 +602,16 @@ Create service:
 ```bash
 # Ex: sudo docker service create --name java-web-app -p 8080:8080 shas/javawebapp
 sudo docker service create --name java-web-app -p 8080:8080 shasi19/javawebapp
+
 # Scale up & down docker service 
 sudo docker service scale java-web-app=3
+
 # List services
 sudo docker service ls
+
 # Inspect docker service 
 sudo docker service inspect --pretty java-web-app
+
 # Remove docker service 
 sudo docker service rm java-web-app
 ```
@@ -611,13 +628,15 @@ Ports: enable port 2377 (swarm communication) in security groups.
 ---
 
 ## 🔧 Quick Git Upload Instructions
-To upload this README to your repository:
+To upload more instructions to this repository, you can reach us! 😀 😃
 
 ```bash
 # from repo root
 git add README.md
 git commit -m "Add Dockerization README"
 git push origin main    # adjust branch name if needed
+
+# Will review 😀 😃
 ```
 
 ---
