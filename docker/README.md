@@ -1,4 +1,4 @@
-```markdown
+
 # 🚀 Application Dockerization Guide
 
 A concise, friendly guide that explains application architecture, tech stack, environments, Docker concepts, Dockerfiles, Docker Compose, Docker Swarm, and practical examples to help you containerize and run real-world applications (Java Spring Boot, Java web (WAR), Python Flask, React, etc.).
@@ -87,10 +87,16 @@ Common environments in real-world delivery:
 
 As a DevOps engineer you set up infrastructure and install dependencies (or provide containerized workloads). Docker reduces version mismatch and installation issues across environments.
 
+Note: There is a chance of doing mistakes in dependencies installation process (version compatability issues can occur)
+
+To simplify application execution in any machine we can use Docker.
+
 ---
 
 ## 🐳 Why Docker?
+- Docker is a free & open source software
 - Containerization = package application code + runtime + dependencies  
+- We can make our application portable using Docker
 - Portable across machines and environments  
 - Consistent behavior between local, CI, and production  
 - Faster onboarding and reproducible runtime
@@ -101,9 +107,11 @@ As a DevOps engineer you set up infrastructure and install dependencies (or prov
 
 Key concepts:
 - Dockerfile — recipe describing how to build an image  
-- Docker Image — immutable artifact containing code + runtime  
-- Docker Registry — store for images (Docker Hub, private registries)  
-- Docker Container — running instance of an image
+- Docker Image — package which contains code + dependencies 
+- Docker Registry — store for images (Docker Hub, Harbor, private registries)  
+- Docker Container — running instance of an image or used to run application
+
+Note: When we run docker image then Docker container will be created. Docker container is a linux virtual machine.
 
 ### 🔁 Docker architecture (diagram)
 ```mermaid
@@ -196,13 +204,42 @@ Tip: Use `docker logs -f <name>` to follow logs in real time. ✅
 - FROM — base image (e.g., openjdk:17, python:3.6, tomcat:9.0)  
 - LABEL — metadata (use instead of MAINTAINER)  
 - RUN — executed during image build (install packages, build artifacts)  
+Note: Used to specify instructions at the time of docker image creation. We can write multiple RUN instructions in single docker file and all those instructions will be processed in the order.
+
 - CMD — default command when the container runs (only last CMD used)  
+Note: Used to specify instructions to execute at the time of docker container creation.
+ We can write multiple CMD instructions in single docker file but docker will process only last CMD instruction.
+
 - ENTRYPOINT — fixed entrypoint; CMD supplies default args  
+```dockerfile
+ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["python", "app.py"]
+```
+Note: CMD instruction we can override using command line arguments where ENTRYPOINT instruction we can't override.
+
 - COPY — copy files from build context to image  
+```dockerfile
+COPY target/app.jar  /usr/app/app.jar
+COPY target/app.war  /usr/app/tomcat/webapps/app.war
+COPY app.py /usr/app/app.py
+```
+
 - ADD — similar to COPY, supports URLs and tar extraction  
+```dockerfile
+ADD target/app.jar  /usr/app/app.jar
+ADD <http-url>  /usr/app/app.jar
+```
+
 - WORKDIR — set working directory  
+```dockerfile
+COPY target/app.jar  /usr/app/app.jar
+WORKDIR /usr/app
+CMD 'java -jar app.jar'
+```
+
 - USER — run commands as a specific user  
 - EXPOSE — document container port (does not publish it)
+Note: It is only to provide inforation. We can't change container port using EXPOSE.
 
 Note: Prefer LABEL over MAINTAINER (MAINTAINER is deprecated).
 
@@ -214,7 +251,7 @@ Java Web App (WAR + Tomcat):
 
 ```dockerfile
 FROM tomcat:9.0
-LABEL maintainer="Ashok"
+LABEL maintainer="Shasi"
 EXPOSE 8080
 COPY target/app.war /usr/local/tomcat/webapps/
 ```
@@ -223,24 +260,26 @@ Spring Boot (JAR):
 
 ```dockerfile
 FROM openjdk:17
-LABEL maintainer="Ashok"
+LABEL maintainer="Shasi"
 COPY target/app.jar /usr/app/
 WORKDIR /usr/app/
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
+Note: Every SpringBoot application will be packaged as jar file only. To run spring boot application we need to execute jar file. When we run springboot application jar file then springboot will start tomcat server with 8080 port number (embedded tomcat server).
 
 Python Flask:
 
 ```dockerfile
 FROM python:3.6
-LABEL maintainer="Ashok"
+LABEL maintainer="Shasi"
 COPY . /usr/app/
 WORKDIR /usr/app/
 RUN pip install -r requirements.txt
 EXPOSE 5000
 ENTRYPOINT ["python", "app.py"]
 ```
+Note: Flask is a python library which is to develop rest apis in python. To download flask library we will use 'python pip software'. We will configure dependencies in "requirements.txt"
 
 React (multi-stage, served by nginx):
 
@@ -250,6 +289,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+# present working directory to current working directory
 COPY . .
 RUN npm run build
 
@@ -269,6 +309,9 @@ docker build -t my-app-image .
 # Run (map host port 8080 to container 8080)
 docker run -d -p 8080:8080 my-app-image
 ```
+
+Note: Enable host port number in security group inbound rules to access the application
+URL : http://public-ip:host-port/war-file-name/
 
 ---
 
@@ -340,8 +383,16 @@ docker push <dockerhub-username>/my-app-image:latest
 ## 🌐 Docker Networks
 Docker networks let containers communicate:
 
-Default networks: bridge, host, none.  
+- Docker network is used to provide isolated network for containers. If we run 2 containers under same network then one contianer can communicate with another container.
+
+Default networks: bridge, host, none
+- Bridge network is used to run standalone containers. It will assign one IP for container. It is the default network for docker container.
+- Host network is also used to run standalone containers. This will not assign any ip for our container.	
+- None means no network will be available.
+
 Other options: overlay (for swarm), macvlan.
+- Overlay network is used for Orchestration purpose (Docker Swarm)	
+- Macvlan network will assign physical Ip for our container.
 
 Commands:
 
@@ -356,7 +407,31 @@ docker network rm my-net
 ---
 
 ## 🧱 Docker Compose
+Earlier people developed projects using Monolithic Architecture (everthing in single app)
+Now a days projects are developing based on Microservices architecture.
+Microservices means multiple backend apis will be avialable.
+
 Manage multi-container apps with a single YAML file.
+
+Note: For every API we need to create seperate container. When we have multiple containers, management will become very difficult (create / stop / start)
+
+To overcome these problems we will use Docker Compose.
+Docker Compose is used to manage Multi - Container Based applications.
+
+### docker-compose.yml
+docker-compose.yml file is used to specify containers information.
+The default file name is docker-compose.yml (we can change it).
+docker-compose.yml file contains below 4 sections:
+- version : It represents compose yml version
+- services: It represents containers information (image-name, port-mapping etc..)
+- networks: Represents docker network to run our containers
+- volumes: Represents containers storage location
+
+```bash
+# Install docker compose
+sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+```
 
 Example: Spring Boot + MySQL (docker-compose.yml):
 
@@ -412,6 +487,19 @@ docker-compose --version
 ## 💾 Stateful vs Stateless Containers & Volumes
 - Stateless container: data lost when container removed.  
 - Stateful container: data persisted (use volumes).
+Note: Docker containers are stateless by default.
+
+Note: In spring-boot-mysql app, we are using mysqldb as docker container to store application data. When we re-create containers db also got recreated hence we lost data (this is not accepted in realtime).
+
+To maintain data permanently, we need to make docker container as statefull.
+To make container as statefull, we need to use Docker volumes concept.
+
+---
+
+### Docker volumes
+Volumes are used to persist data which is generated by docker container.
+Volumes are used to avoid data loss
+Using volumes we can make container as statefull
 
 Docker volume types:
 - Anonymous volumes  
@@ -438,33 +526,76 @@ services:
       - ./mysql-data:/var/lib/mysql
 ```
 
+```yaml
+version: "3"
+services:
+  application:
+    image: spring-boot-mysql-app
+    ports:
+      - "8080:8080"
+    networks:
+      - springboot-db-net
+    depends_on:
+      - mysqldb
+    volumes:
+      - /data/springboot-app
+  mysqldb:
+    image: mysql:5.7
+    networks:
+      - springboot-db-net
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=sbms
+    volumes:
+      - .app:/var/lib/mysql
+networks:
+  springboot-db-net: 
+```
+
 Make sure host directories have correct ownership/permissions.
 
 ---
 
 ## 🗂️ Docker Swarm (basic)
 Docker Swarm is an orchestration platform (cluster of Docker nodes).
+Docker swarm is used to setup docker cluster(group of containers)
 
 Initialize swarm on master:
 
 ```bash
+# Install docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+```
+
+```bash
+# For Master Machine below command
 sudo docker swarm init --advertise-addr <master-private-ip>
+# Ex: sudo docker swarm init --advertise-addr 172.31.41.217
 sudo docker swarm join-token worker  # get token
+# Ex: sudo docker swarm join --token SWMTKN-1-4pkn4fiwm09haue0v633s6snitq693p1h7d1774c8y0hfl9yz9-8l7vptikm0x29shtkhn0ki8wz 172.31.37.100:2377
 # On worker nodes:
 sudo docker swarm join --token <token> <master-ip>:2377
 ```
 
+### Docker swarm service
+Service is collection of one or more containers of same image
+There are 2 types of services in docker swarm
+- Replica (default mode)
+- global
+
 Create service:
 
 ```bash
-sudo docker service create --name java-web-app -p 8080:8080 ashokit/javawebapp
-# Scale
+# Ex: sudo docker service create --name java-web-app -p 8080:8080 shas/javawebapp
+sudo docker service create --name java-web-app -p 8080:8080 shasi19/javawebapp
+# Scale up & down docker service 
 sudo docker service scale java-web-app=3
 # List services
 sudo docker service ls
-# Inspect
+# Inspect docker service 
 sudo docker service inspect --pretty java-web-app
-# Remove
+# Remove docker service 
 sudo docker service rm java-web-app
 ```
 
